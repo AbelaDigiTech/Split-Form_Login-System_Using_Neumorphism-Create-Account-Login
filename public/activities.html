@@ -1,0 +1,189 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activities - Abela DigiTech</title>
+<style>
+  :root {
+    --accent: #2b6cb0;
+    --muted: #64748b;
+    --bg: #f0f4ff;
+    --card-bg: #fff;
+  }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 20px;
+    color: #0f172a;
+  }
+
+  h1 {
+    text-align: center;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 25px;
+  }
+
+  .filter-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .filter-btn:hover,
+  .filter-btn.active { background: #1a4b8b; }
+
+  .search-box {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    min-width: 220px;
+    font-size: 1rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+  }
+
+  .card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+  }
+
+  .card-content {
+    padding: 15px;
+  }
+
+  .card-content h3 {
+    color: var(--accent);
+    margin: 0 0 8px;
+    font-size: 18px;
+  }
+
+  .card-content p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .btn {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: background 0.3s ease;
+  }
+
+  .btn:hover { background: #1a4b8b; }
+</style>
+</head>
+<body>
+
+<h1>Activities Dashboard</h1>
+
+<div class="controls">
+  <button class="filter-btn active" data-category="all">All</button>
+  <button class="filter-btn" data-category="electronics">Electronics</button>
+  <button class="filter-btn" data-category="accessories">Accessories</button>
+  <button class="filter-btn" data-category="gadgets">Gadgets</button>
+
+  <input type="text" id="searchInput" class="search-box" placeholder="Search products...">
+</div>
+
+<div class="grid" id="cardGrid"></div>
+
+<script>
+const products = [
+  { title: "Smartphone", description: "5G smartphone with crisp display.", image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=400&q=80", category: "electronics" },
+  { title: "Smartwatch", description: "Track your health in style.", image: "https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&w=400&q=80", category: "gadgets" },
+  { title: "Wireless Headphones", description: "Noise-cancelling, long battery life.", image: "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?auto=format&fit=crop&w=400&q=80", category: "accessories" },
+  { title: "Laptop", description: "Powerful and sleek laptop.", image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80", category: "electronics" },
+  { title: "Drone Camera", description: "Capture 4K aerial footage.", image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80", category: "gadgets" },
+  { title: "Phone Case", description: "Stylish protection for your device.", image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=400&q=80", category: "accessories" }
+];
+
+const grid = document.getElementById("cardGrid");
+const filterButtons = document.querySelectorAll(".filter-btn");
+const searchInput = document.getElementById("searchInput");
+
+let currentCategory = "all";
+let searchQuery = "";
+
+function renderCards(items) {
+  grid.innerHTML = "";
+  if (items.length === 0) grid.innerHTML = "<p style='text-align:center;'>No results found.</p>";
+  items.forEach(item => {
+    const card = document.createElement("div");
+    card.classList.add("card");
+    card.innerHTML = `
+      <img src="${item.image}" alt="${item.title}">
+      <div class="card-content">
+        <h3>${item.title}</h3>
+        <p>${item.description}</p>
+        <a href="#" class="btn">Learn More</a>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function filterAndSearch() {
+  const filtered = products.filter(p => 
+    (currentCategory === "all" || p.category === currentCategory) &&
+    (p.title.toLowerCase().includes(searchQuery) || p.description.toLowerCase().includes(searchQuery))
+  );
+  renderCards(filtered);
+}
+
+filterButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelector(".filter-btn.active")?.classList.remove("active");
+    btn.classList.add("active");
+    currentCategory = btn.dataset.category;
+    filterAndSearch();
+  });
+});
+
+searchInput.addEventListener("input", e => {
+  searchQuery = e.target.value.toLowerCase();
+  filterAndSearch();
+});
+
+renderCards(products);
+</script>
+
+</body>
+</html>

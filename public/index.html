@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Abela DigiTech</title>
+<style>
+body { font-family: Arial, sans-serif; background: #eef4ff; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+.card { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); width: 320px; text-align: center; }
+.card h2 { margin-bottom: 20px; }
+input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 15px; }
+button { width: 100%; padding: 12px; border-radius: 6px; border: none; background: #2b6cb0; color: #fff; font-size: 16px; cursor:pointer; }
+button:hover{opacity:.95;}
+a { color:#2b6cb0; text-decoration:none; }
+#msg { margin-top:10px; min-height:20px; color:red; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Login</h2>
+  <input id="email" type="email" placeholder="Email" required>
+  <input id="password" type="password" placeholder="Password" required>
+  <button id="loginBtn">Login</button>
+  <p style="margin-top:12px;">Not registered? <a href="register.html">Create Account</a></p>
+  <div id="msg"></div>
+</div>
+
+<script>
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const msg = document.getElementById("msg");
+  msg.textContent = "";
+
+  if (!email) return msg.textContent = "Email is required!";
+  if (!password) return msg.textContent = "Password is required!";
+
+  try {
+    const res = await fetch("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (data.success) window.location.href = "welcome.html";
+    else msg.textContent = data.message;
+  } catch(err) {
+    console.error(err);
+    msg.textContent = "You have not registered.";
+  }
+});
+</script>
+
+</body>
+</html>
