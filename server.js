@@ -1,36 +1,48 @@
+
+
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+const cors = require("cors");
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve frontend
+// Configure CORS: if FRONTEND_ORIGIN set, restrict to it; otherwise allow all (dev)
+const allowedOrigin = process.env.FRONTEND_ORIGIN || null;
+if (allowedOrigin) {
+  app.use(cors({ origin: allowedOrigin }));
+  console.log("CORS restricted to:", allowedOrigin);
+} else {
+  app.use(cors());
+  console.log("CORS: allowing all origins (set FRONTEND_ORIGIN in production)");
+}
+
+// Serve static frontend (public/)
 app.use(express.static(path.join(__dirname, "public")));
 
-// Ensure data folder and users.json exist
+// Data folder and users.json (note: ephemeral on Render)
 const dataDir = path.join(__dirname, "data");
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
 const usersPath = path.join(dataDir, "users.json");
 if (!fs.existsSync(usersPath)) fs.writeFileSync(usersPath, "[]", "utf8");
 
-// Helper functions
+// Helpers
 function loadUsers() {
   try {
     const raw = fs.readFileSync(usersPath, "utf8");
     return JSON.parse(raw || "[]");
   } catch (err) {
-    console.error(err);
+    console.error("Error reading users:", err);
     return [];
   }
 }
-
 function saveUsers(users) {
   try {
     fs.writeFileSync(usersPath, JSON.stringify(users, null, 2), "utf8");
   } catch (err) {
-    console.error(err);
+    console.error("Error saving users:", err);
   }
 }
 
@@ -65,6 +77,11 @@ app.post("/login", (req, res) => {
   res.json({ success: true, message: "Login successful!" });
 });
 
-// ===== SERVER =====
-const PORT = 3000;
-app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
+// ===== HEALTH CHECK (handy) =====
+app.get("/health", (req, res) => res.json({ ok: true, env: process.env.NODE_ENV || "development" }));
+
+// ===== START SERVER =====
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

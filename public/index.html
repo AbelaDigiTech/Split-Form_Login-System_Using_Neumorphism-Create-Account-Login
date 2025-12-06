@@ -2,18 +2,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Login - Abela DigiTech</title>
 <style>
-body { font-family: Arial, sans-serif; background: #eef4ff; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
-.card { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); width: 320px; text-align: center; }
-.card h2 { margin-bottom: 20px; }
-input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 15px; }
-button { width: 100%; padding: 12px; border-radius: 6px; border: none; background: #2b6cb0; color: #fff; font-size: 16px; cursor:pointer; }
-button:hover{opacity:.95;}
-a { color:#2b6cb0; text-decoration:none; }
-#msg { margin-top:10px; min-height:20px; color:red; }
+  body { font-family: Arial, sans-serif; background: #eef4ff; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+  .card { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); width: 320px; text-align: center; }
+  .card h2 { margin-bottom: 20px; }
+  input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 15px; }
+  button { width: 100%; padding: 12px; border-radius: 6px; border: none; background: #2b6cb0; color: #fff; font-size: 16px; cursor:pointer; }
+  button:hover{opacity:.95;}
+  a { color:#2b6cb0; text-decoration:none; }
+  #msg { margin-top:10px; min-height:20px; color:#b00020; }
 </style>
 </head>
 <body>
@@ -28,6 +28,16 @@ a { color:#2b6cb0; text-decoration:none; }
 </div>
 
 <script>
+/*
+  API_BASE logic:
+  - When the page is served from localhost (dev), use local backend at http://localhost:3000
+  - When the page is served from Render (or any real host) we use relative paths (''), so fetch('/login') targets the same origin.
+*/
+const API_BASE = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+  ? "http://localhost:3000"
+  : ""; // empty = same origin (recommended for Render)
+
+// Event
 document.getElementById("loginBtn").addEventListener("click", async () => {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -38,20 +48,33 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
   if (!password) return msg.textContent = "Password is required!";
 
   try {
-    const res = await fetch("/login", {
+    const res = await fetch(`${API_BASE}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password })
     });
+
+    // if backend returns non-JSON or non-2xx, show basic message
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error("Login failed", res.status, errText);
+      return msg.textContent = "Login failed. See console.";
+    }
+
     const data = await res.json();
-    if (data.success) window.location.href = "welcome.html";
-    else msg.textContent = data.message;
-  } catch(err) {
-    console.error(err);
-    msg.textContent = "You have not registered.";
+    if (data.success) {
+      // successful -> redirect to welcome
+      window.location.href = "welcome.html";
+    } else {
+      msg.textContent = data.message || "Login failed";
+    }
+  } catch (err) {
+    console.error("Network/server error:", err);
+    msg.textContent = "Network error — could not reach server.";
   }
 });
 </script>
 
 </body>
 </html>
+

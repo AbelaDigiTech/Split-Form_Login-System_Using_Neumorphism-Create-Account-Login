@@ -1,28 +1,30 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Create Account - Abela DigiTech</title>
 <style>
   body, html { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; height: 100%; }
-  .split { display: flex; height: 100vh; }
-  .left { flex: 1; background: linear-gradient(135deg, #4a90e2, #357ae8); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; }
-  .left img { width: 140px; margin-bottom: 20px; }
-  .left h1 { font-size: 36px; margin-bottom: 15px; }
-  .left p { font-size: 20px; line-height: 1.5; max-width: 400px; }
+  .split { display:flex; height:100vh; }
+  .left { flex:1; background: linear-gradient(135deg,#4a90e2,#357ae8); color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:40px; }
+  .left img { width:140px; margin-bottom:20px; }
+  .left h1 { font-size:36px; margin-bottom:15px; }
+  .left p { font-size:20px; line-height:1.5; max-width:400px; }
 
-  .right { flex: 1; display: flex; justify-content: center; align-items: center; background: #f0f4ff; }
-  .card { background: #e9eef5; padding: 40px 30px; border-radius: 20px; box-shadow: 8px 8px 15px #c5cbd3, -8px -8px 15px #ffffff; width: 90%; max-width: 400px; }
-  .card h2 { text-align: center; margin-bottom: 25px; color: #333; }
-  .field { margin-bottom: 18px; }
-  .field label { display: block; margin-bottom: 6px; font-weight: 600; }
-  .field input { width: 100%; padding: 12px; border-radius: 12px; border: none; font-size: 15px; box-shadow: inset 5px 5px 10px #c5cbd3, inset -5px -5px 10px #ffffff; }
-  .field input:focus { outline: none; }
-  button { width: 100%; padding: 14px; font-size: 16px; border-radius: 12px; border: none; background: #e9eef5; box-shadow: 5px 5px 10px #c5cbd3, -5px -5px 10px #ffffff; cursor: pointer; transition: 0.2s; }
-  button:hover { transform: translateY(-2px); }
-  .login-link { text-align: center; margin-top: 15px; font-size: 14px; }
-  .login-link a { color: #357ae8; text-decoration: none; }
+  .right { flex:1; display:flex; justify-content:center; align-items:center; background:#f0f4ff; }
+  .card { background:#e9eef5; padding:40px 30px; border-radius:20px; box-shadow:8px 8px 15px #c5cbd3,-8px -8px 15px #fff; width:90%; max-width:400px; }
+  .card h2 { text-align:center; margin-bottom:25px; color:#333; }
+  .field { margin-bottom:18px; }
+  .field label { display:block; margin-bottom:6px; font-weight:600; }
+  .field input { width:100%; padding:12px; border-radius:12px; border:none; font-size:15px; box-shadow: inset 5px 5px 10px #c5cbd3, inset -5px -5px 10px #fff; }
+  .field input:focus { outline:none; }
+  button { width:100%; padding:14px; font-size:16px; border-radius:12px; border:none; background:#357ae8; color:white; cursor:pointer; transition:0.15s transform; }
+  button:hover { transform:translateY(-2px); }
+  .login-link { text-align:center; margin-top:15px; font-size:14px; }
+  .login-link a { color:#357ae8; text-decoration:none; }
+  #msg { margin-top:10px; color:#b00020; text-align:center; min-height:22px; }
 </style>
 </head>
 <body>
@@ -55,29 +57,55 @@
 
       <button type="submit">Sign Up</button>
       <p class="login-link">Already have an account? <a href="index.html">Login</a></p>
+
+      <div id="msg"></div>
     </form>
   </div>
 </div>
 
 <script>
-document.getElementById("registerForm").addEventListener("submit", async e => {
+const API_BASE = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+  ? "http://localhost:3000"
+  : ""; // empty means same origin (Render will serve static files + API)
+
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
   const confirm = document.getElementById("confirm").value.trim();
+  const msgEl = document.getElementById("msg");
+  msgEl.textContent = "";
+  msgEl.style.color = "#b00020";
+
+  if (!email) return msgEl.textContent = "Email is required!";
+  if (!password) return msgEl.textContent = "Password is required!";
+  if (!confirm) return msgEl.textContent = "Confirm password is required!";
+  if (password !== confirm) return msgEl.textContent = "Passwords do not match!";
 
   try {
-    const res = await fetch("/register", {
+    const res = await fetch(`${API_BASE}/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, confirm })
     });
+
+    if (!res.ok) {
+      const t = await res.text();
+      console.error("Register error", res.status, t);
+      return msgEl.textContent = "Registration failed. See console.";
+    }
+
     const data = await res.json();
-    alert(data.message);
-    if (data.success) window.location.href = "index.html";
+    msgEl.style.color = data.success ? "green" : "#b00020";
+    msgEl.textContent = data.message || (data.success ? "Account created" : "Error");
+
+    if (data.success) {
+      setTimeout(() => window.location.href = "index.html", 900);
+    }
   } catch (err) {
-    console.error(err);
-    alert("Network error.");
+    console.error("Network error:", err);
+    msgEl.textContent = "Network error — could not reach server.";
   }
 });
 </script>
